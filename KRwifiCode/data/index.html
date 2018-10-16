@@ -1,0 +1,600 @@
+<!DOCTYPE HTML><HTML>
+<META name='viewport' content='width=device-width, initial-scale=1'>
+<SCRIPT>
+
+var missionIndex = 0; 
+var missionStarted = false;
+
+InitWebSocket(); 
+  
+function InitWebSocket()
+{ 
+  websock=new WebSocket('ws://'+window.location.hostname+':88/'); 
+  websock.onmessage=function(evt)
+  { 
+    JSONobj=JSON.parse(evt.data);
+
+    if(JSONobj.hasOwnProperty("runtime"))
+    {
+       document.getElementById('runtime').innerHTML=JSONobj.runtime;
+    }
+    if(JSONobj.hasOwnProperty("pSteer"))
+    {
+       document.getElementById('p_steer').value=JSONobj.pSteer;
+    }
+    if(JSONobj.hasOwnProperty("iSteer"))
+    {
+       document.getElementById('i_steer').value=JSONobj.iSteer;
+    }
+    if(JSONobj.hasOwnProperty("dSteer"))
+    {
+       document.getElementById('d_steer').value=JSONobj.dSteer;
+    }
+    if(JSONobj.hasOwnProperty("pThrottle"))
+    {
+       document.getElementById('p_throttle').value=JSONobj.pThrottle;
+    }
+    if(JSONobj.hasOwnProperty("iThrottle"))
+    {
+       document.getElementById('i_throttle').value=JSONobj.iThrottle;
+    }
+    if(JSONobj.hasOwnProperty("dThrottle"))
+    {
+       document.getElementById('d_throttle').value=JSONobj.dThrottle;
+    }
+    if(JSONobj.hasOwnProperty("minSteer"))
+    {
+       document.getElementById('steer_min').value=JSONobj.minSteer;
+    }
+    if(JSONobj.hasOwnProperty("maxSteer"))
+    {
+       document.getElementById('steer_max').value=JSONobj.maxSteer;
+    }
+    if(JSONobj.hasOwnProperty("midSteer"))
+    {
+       document.getElementById('steer_mid').value=JSONobj.midSteer;
+    }
+    if(JSONobj.hasOwnProperty("maxReverse"))
+    {
+       document.getElementById('max_reverse').value=JSONobj.maxReverse;
+    }
+    if(JSONobj.hasOwnProperty("maxForward"))
+    {
+       document.getElementById('max_forward').value=JSONobj.maxForward;
+    }
+    if(JSONobj.hasOwnProperty("ratio"))
+    {
+       document.getElementById('ratio').value=JSONobj.ratio;
+    }
+    if(JSONobj.hasOwnProperty("lat"))
+    {
+       document.getElementById('lat').innerHTML=JSONobj.lat; 
+       document.getElementById('lat2').innerHTML=JSONobj.lat;
+       document.getElementById('lon').innerHTML=JSONobj.lon;
+       document.getElementById('lon2').innerHTML=JSONobj.lon;
+    }
+    if(JSONobj.hasOwnProperty("tlat"))
+    {
+       document.getElementById('tlat').innerHTML=JSONobj.tlat; 
+       document.getElementById('tlon').innerHTML=JSONobj.tlon;
+       document.getElementById('tlat2').innerHTML=JSONobj.tlat;
+       document.getElementById('tlon2').innerHTML=JSONobj.tlon;
+    }
+    if(JSONobj.hasOwnProperty("heading"))
+    {
+       document.getElementById('heading').innerHTML=JSONobj.heading;
+       document.getElementById('heading2').innerHTML=JSONobj.heading;
+    }
+    if(JSONobj.hasOwnProperty("theading"))
+    {
+       document.getElementById('theading').innerHTML=JSONobj.theading;
+       document.getElementById('theading2').innerHTML=JSONobj.theading;
+    }
+    if(JSONobj.hasOwnProperty("tdistance"))
+    {
+       document.getElementById('tdistance').innerHTML=JSONobj.tdistance;
+       document.getElementById('tdistance2').innerHTML=JSONobj.tdistance;
+    }
+    if(JSONobj.hasOwnProperty("tindex"))
+    {
+       changeIndex(JSONobj.tindex);
+    }
+    if(JSONobj.hasOwnProperty("accX"))
+    {
+       document.getElementById('accX').innerHTML=JSONobj.accX; 
+       document.getElementById('accY').innerHTML=JSONobj.accY; 
+       document.getElementById('accZ').innerHTML=JSONobj.accZ;
+    }
+    if(JSONobj.hasOwnProperty("gyroX"))
+    {
+       document.getElementById('gyroX').innerHTML=JSONobj.gyroX; 
+       document.getElementById('gyroY').innerHTML=JSONobj.gyroY; 
+       document.getElementById('gyroZ').innerHTML=JSONobj.gyroZ;
+    }
+    if(JSONobj.hasOwnProperty("steeringVAL"))
+    {
+       document.getElementById('steeringVAL').innerHTML=JSONobj.steeringVAL; 
+       document.getElementById('throttleVAL').innerHTML=JSONobj.throttleVAL;
+    }
+    if(JSONobj.hasOwnProperty("mode"))
+    {
+       document.getElementById('mode').innerHTML=JSONobj.mode;
+    }
+    if(JSONobj.hasOwnProperty("tempF"))
+    {
+       document.getElementById('tempF').innerHTML=JSONobj.tempF;
+    }
+    if(JSONobj.hasOwnProperty("tempC"))
+    {
+       document.getElementById('tempC').innerHTML=JSONobj.tempC;
+    }
+    if(JSONobj.hasOwnProperty("decAngle"))
+    {
+        document.getElementById('decAngle').value=JSONobj.decAngle;
+    }
+  } 
+} 
+
+function OpenTAB(evt, tabName)
+{ 
+    var i, tabcontent, tablinks; 
+    tabcontent = document.getElementsByClassName('tabcontent'); 
+    for(i = 0; i < tabcontent.length; i++)
+    { 
+      tabcontent[i].style.display = "none";
+    } 
+    tablinks = document.getElementsByClassName('tablinks'); 
+    for(i = 0; i < tablinks.length; i++)
+    { 
+      tablinks[i].className = tablinks[i].className.replace(' active', "");
+    } 
+    document.getElementById(tabName).style.display = "block"; 
+    evt.currentTarget.className += " active"; 
+} 
+
+function newElement(latitude, longitude)
+{
+    if(!missionStarted)
+    {
+        var li = document.createElement("LI");
+        li.innerHTML="<SPAN CLASS='latitude'>"+latitude+"</SPAN>, <SPAN CLASS='longitude'>"+longitude+"</SPAN>";
+        if(latitude == '' || longitude == '')
+        {
+            alert("You must enter a valid GPS coordinate"); 
+        }
+        else
+        {
+            li.addEventListener('click', function(ev){
+                ev.target.classList.toggle('checked');
+            },false);
+            document.getElementById("missionList").appendChild(li);         
+        }
+    }
+    else{ alert("Cannot add list items while mission is started");}
+}
+
+function removeCheckedElements()
+{
+    if(!missionStarted)
+    {
+        selected = document.getElementsByClassName('checked');
+        if(confirm("Delete selected?"))
+        {
+            for(i= selected.length - 1;i >=0; i--)
+            {
+                selected[i].parentNode.removeChild(selected[i]);
+            }
+        }
+    }
+    else{ alert("Cannot delete list items while mission is started");}
+}
+
+function removeAllElements()
+{
+    if(!missionStarted)
+    {
+        list = document.getElementsByTagName("LI");
+        if(confirm("Delete all waypoints?"))
+        {
+            for(i= list.length - 1;i >=0; i--)
+            {
+                list[i].parentNode.removeChild(list[i]);
+            }
+        }
+    }
+    else{ alert("Cannot delete list while mission is started");}
+}
+
+function changeIndex(index)
+{
+    if(missionStarted)
+    {
+        list = document.getElementsByTagName("LI");
+        list[missionIndex].classList.remove("target");
+        if(index < list.length)
+        {         
+            missionIndex = index;
+            list[missionIndex].classList.add("target");
+        }
+        else
+        {
+            stopMission();
+        }
+    }
+}
+
+function startMission()
+{
+  
+  if(!missionStarted)
+  {
+    //need to send the list down to the ESP
+    mlist = document.getElementById("missionList");
+    list = mlist.getElementsByTagName("LI");
+    len = list.length;
+    if(len > 0)
+    {
+        text = "LIST="+len+";";
+        for(i=0;i<len;i++)
+        {
+            LAT = list[i].getElementsByClassName('latitude')[0].innerHTML;
+            LON = list[i].getElementsByClassName('longitude')[0].innerHTML;
+            text+=LAT+","+LON+";";
+        }
+        websock.send(text);
+        //alert(text);      
+        websock.send('MISSION=START');
+        document.getElementById("started").classList.remove("stopped");
+        missionStarted = true;
+    }
+    else{ alert("Mission: Invalid");}
+  }
+  else
+  {
+      websock.send('MISSION=START');
+      document.getElementById("paused").classList.add("stopped");
+  }
+}
+
+function pauseMission()
+{
+    if(missionStarted)
+    {
+        websock.send('MISSION=PAUSE');
+        document.getElementById("paused").classList.toggle("stopped");
+    }
+}
+
+function stopMission()
+{
+    missionStarted = false;         
+    document.getElementById("started").classList.add("stopped");
+    document.getElementById("paused").classList.add("stopped");
+    list = document.getElementsByTagName("LI");
+    for(i=0;i<list.length;i++){ list[i].classList.remove("target");}
+    websock.send('MISSION=STOP');
+}
+
+function setHomeCoords(latitude, longitude)
+{
+    if(latitude == '' || longitude == '')
+    {
+        alert("invalid GPS coordinate"); 
+    }
+    else
+    {
+        document.getElementById("homeLat").innerHTML = latitude;
+        document.getElementById("homeLon").innerHTML = longitude;
+        websock.send("HOME="+latitude+","+longitude);
+    }         
+}
+
+function setHomeSelected()
+{
+    selected = document.getElementsByClassName('checked');
+    if(selected.length > 1)
+    {
+        alert("Too many points selected");                   
+    }
+    else if(selected.length == 1)
+    {
+        latitude = selected[0].getElementsByClassName('latitude');
+        longitude = selected[0].getElementsByClassName('longitude');
+        setHomeCoords(latitude[0].innerHTML, longitude[0].innerHTML);
+    }
+    else
+    {
+        alert("No points selected");    
+    }
+}
+
+function unselectAll()
+{
+    list = document.getElementsByTagName("LI");
+    for(i=0;i<list.length;i++)
+    {
+        list[i].classList.remove("checked");                          
+    }         
+}
+
+function goHome()
+{
+    home = document.getElementById("homeLat");
+    if(home.innerHTML == "")
+    {
+        alert("Your robot is homeless.");
+    }
+    else
+    {
+        websock.send('MISSION=RETURN')
+    }
+}
+
+var missionFile;
+
+window.onload = function()
+{
+    var fileInput = document.getElementById("waypoints");
+    fileInput.addEventListener('change', function(e){
+        var file = fileInput.files[0];
+        var type = /text.*/;
+        if(file.type.match(type))
+        {
+            var reader = new FileReader();
+            reader.onload = function(e)
+            {
+                missionFile = reader.result;
+            }
+            reader.readAsText(file);
+        }
+        else{ alert('File not supported');}
+    });
+}
+
+function addFile()
+{
+  if(missionFile)
+  {
+    if(!missionStarted)
+    {
+        text = missionFile;
+        list = text.split(/\r?\n/);
+        for(i=0;i<list.length;i++)
+        {
+            coords = list[i].split(',');
+            newElement(coords[0],coords[1]);
+            //alert(list[i]);
+        }
+    }
+    else{ alert("cannot load file while mission is in progress"); }
+  }
+}
+</SCRIPT>
+ 
+<HEAD>
+<STYLE> 
+         DIV.tab 
+         { 
+           overflow: hidden; 
+           border: none;
+           color: #000000; 
+           background-color: #f1f1f1;
+         } 
+        
+         DIV.tab button 
+         { 
+             background-color: inherit; 
+             float: left; 
+             border: 1px solid #ccc; 
+             outline: none; 
+             cursor: pointer; 
+             padding: 14px 16px; 
+             transition: 0.3s;
+         } 
+            
+         DIV.tab button:hover 
+         { 
+           background-color: #ddd;
+         } 
+        
+         DIV.tab button.active
+         { 
+           background-color: #ccc;
+         } 
+        
+         .tabcontent table
+         { 
+           background-color: #f1f1f1; 
+           text-align:left;
+         } 
+          
+         .tabcontent{ 
+          
+          display: none; 
+          padding: 6px 12px; 
+          border: none;
+         }
+         .tabcontent ol li:hover{
+            background: #ddd;
+         } 
+         .tabcontent ol li.checked{
+            background: #888;              
+         }
+         .tabcontent ol li.target{
+            color: #FF0000;
+         }
+         .tabcontent span.stopped{
+            display: none;            
+         }
+    </STYLE> 
+</HEAD>
+<BODY>
+  <H3>KING RICHARD</H3>
+  Runtime = <A ID='runtime'></A>
+  <DIV CLASS="tab">
+    <BUTTON CLASS="tablinks" ONCLICK="OpenTAB(event,'PID')">PID</BUTTON>
+    <BUTTON ID="defaultOpen" CLASS="tablinks" ONCLICK="OpenTAB(event,'HEALTH')">HEALTH</BUTTON>
+    <BUTTON CLASS="tablinks" ONCLICK="OpenTAB(event,'MISSION')">MISSION</BUTTON>
+  </DIV>
+  
+  <DIV ID="PID" CLASS="tabcontent">
+    <BUTTON ID='loadButton' NAME='LOAD' ONCLICK="websock.send('LOAD=SAVED')">LOAD</BUTTON>
+    <BUTTON ID='saveButton' NAME='SAVE' ONCLICK="websock.send('SAVE=CURRENT')">SAVE</BUTTON>
+    <BUTTON ID='resetButton' NAME='RESET' ONCLICK="websock.send('RESET=VALS')">RESET</BUTTON><BR><BR>
+    <TABLE BORDER=1 WIDTH=200px STYLE='float:left'>   
+      <TR>
+          <TH>PID</TH><TH>P</TH><TH>I</TH><TH>D</TH>
+      </TR>
+      <TR>
+          <TH>Steering</TH>
+          <TD><INPUT ID='p_steer' TYPE='number' ONCHANGE="websock.send('pSteer='+this.value)" MIN='0.0' MAX='2.0' STEP='0.01'></TD>
+          <TD><INPUT ID='i_steer' TYPE='number' ONCHANGE="websock.send('iSteer='+this.value)" MIN='0.0' MAX='0.1' STEP='0.00001'></TD> 
+          <TD><INPUT ID='d_steer' TYPE='number' ONCHANGE="websock.send('dSteer='+this.value)" MIN='0.0' MAX='5.0' STEP='0.01'></TD>
+      </TR>   
+          <TH>Throttle</TH> 
+          <TD><INPUT ID='p_throttle' TYPE='number' ONCHANGE="websock.send('pThrottle='+this.value)" MIN='0.0' MAX='2.0' STEP='0.01'></TD>
+          <TD><INPUT ID='i_throttle' TYPE='number' ONCHANGE="websock.send('iThrottle='+this.value)" MIN='0.0' MAX='0.1' STEP='0.00001'></TD>   
+          <TD><INPUT ID='d_throttle' TYPE='number' ONCHANGE="websock.send('dThrottle='+this.value)" MIN='0.0' MAX='5.0' STEP='0.01'></TD>
+      </TR>    
+  
+      <TR>
+          <TH>Limits</TH><TH>Minimum</TH><TH>Center</TH><TH>Maximum</TH>
+      </TR>
+          <TH>Steering</TH>
+          <TD><INPUT ID='steer_min' TYPE='number' ONCHANGE="websock.send('minSteer='+this.value)" MIN='50' MAX='150' STEP='1'></TD>  
+          <TD><INPUT ID='steer_mid' TYPE='number' ONCHANGE="websock.send('midSteer='+this.value)" MIN='50' MAX='270' STEP='1'></TD>
+          <TD><INPUT ID='steer_max' TYPE='number' ONCHANGE="websock.send('maxSteer='+this.value)" MIN='170' MAX='270' STEP='1'></TD>
+      </TR>
+      <TR>
+          <TH>Throttle</TH>
+          <TD><INPUT ID='max_reverse' TYPE='number' ONCHANGE="websock.send('maxReverse='+this.value)" MIN='0' MAX='100' STEP='1'>%</TD>
+          <TD>(REV/FWD)</TD>
+          <TD><INPUT ID='max_forward' TYPE='number' ONCHANGE="websock.send('maxForward='+this.value)" MIN='0' MAX='100' STEP='1'>%</TD>
+      </TR> 
+      <TR>
+          <TH>Steering/Throttle Ratio:</TH>
+          <TD><INPUT ID='ratio' TYPE='number' ONCHANGE="websock.send('ratio='+this.value)" MIN='0.01' MAX='100' STEP='0.01'></TD>
+      </TR> 
+    </TABLE>  
+</DIV> 
+<DIV ID="HEALTH" CLASS="tabcontent"> 
+  Mode:<A ID='mode'></A><BR> 
+  <TABLE BORDER=1 WIDTH=200px> 
+    <TR> 
+         <TH>GPS</TH><TH>Latitude</TH><TH>Longitude</TH><TH>Heading</TH> 
+    </TR> 
+    <TR> 
+         <TH>Current</TH><TD ID="lat"></TD><TD ID="lon"></TD><TD ID="heading"></TD> 
+    </TR>
+    <TR> 
+         <TH>Target</TH><TD ID="tlat"></TD><TD ID="tlon"></TD><TD ID="theading"></TD>
+    </TR>
+    <TR>
+        <TH COLSPAN="2"> Distance to Target </TH><TD ID="tdistance"></TD><TD>meters</TD>
+    </TR>
+    <TR> 
+         <TH>Sensor</TH><TH>X value</TH><TH>Y value</TH><TH>Z value</TH> 
+    </TR> 
+    <TR> 
+         <TD>Accelerometer</TD><TD ID="accX"></TD><TD ID="accY"></TD><TD ID="accZ"></TD> 
+    </TR> 
+    <TR> 
+         <TD>Gyroscope</TD><TD ID="gyroX"></TD><TD ID="gyroY"></TD><TD ID="gyroZ"></TD> 
+    </TR> 
+    <TR> 
+      <TH>Steering</TH><TH>Throttle</TH><TH>Temp.(&#8451;)</TH><TH>(&#8457;)</TH>
+    </TR> 
+    <TR> 
+      <TD ID="steeringVAL"></TD><TD ID="throttleVAL"></TD><TD ID="tempC"></TD><TD ID="tempF"></TD>
+    </TR> 
+  </TABLE> 
+</DIV>
+<SCRIPT> 
+  document.getElementById('defaultOpen').click(); 
+</SCRIPT> 
+<DIV ID="MISSION" CLASS="tabcontent"> 
+  
+  <BUTTON ID='startButton' NAME='START' ONCLICK="startMission()">START</BUTTON>
+  <BUTTON ID='pauseButton' NAME='PAUSE' ONCLICK="pauseMission()">PAUSE</BUTTON>
+  <BUTTON ID='stopButton' NAME='STOP' ONCLICK="stopMission()">STOP</BUTTON>
+  <SPAN ID="started" CLASS="stopped">Mission in Progress</SPAN>
+  <SPAN ID="paused" CLASS="stopped">(Paused)</SPAN><BR> 
+  <BUTTON ID='returnHome' NAME='RETURN' ONCLICK="goHome()">Return Home</BUTTON>
+  <BUTTON ID='skipTarget' NAME='SKIP' ONCLICK="websock.send('MISSION=SKIP')">Skip Target</BUTTON><BR><BR>
+
+  <TABLE BORDER=1>
+    <TR>
+        <TH>GPS</TH><TH>Latitude</TH><TH>Longitude</TH><TH>Heading</TH>
+    </TR>
+    <TR> 
+         <TH>Current</TH><TD ID="lat2"></TD><TD ID="lon2"></TD><TD ID="heading2"></TD>
+    </TR>
+    <TR> 
+         <TH>Target</TH><TD ID="tlat2"></TD><TD ID="tlon2"></TD><TD ID="theading2"></TD>
+    </TR>
+    <TR>
+         <TH COLSPAN="2">Distance to Target</TH><TD ID="tdistance2"></TD><TD>meters</TD>
+    </TR>
+    <TR>
+         <TH COLSPAN="2">Threshold Distance</TH>
+         <TD><INPUT ID='distThresh' TYPE='number' ONCHANGE="websock.send('threshold='+this.value)" MIN='0.1' MAX='100' STEP='0.01' DEFAULT='1.0'></TD>
+         <TD>meters</TD>
+    </TR>
+    <TR>
+         <TH COLSPAN="2">Declination Angle</TH>
+         <TD><INPUT ID='decAngle' TYPE='number' ONCHANGE="websock.send('decAngle='+this.value)" MIN='-24.0' MAX='24.0' STEP='0.001' DEFAULT='0.0'></TD>
+         <TD>degrees</TD>
+    </TR>
+    <TR>
+         <TH>Home</TH><TD ID="homeLat"></TD><TD ID="homeLon"></TD><TD></TD>
+                      
+    </TR>
+  </TABLE>
+  <BUTTON ID='setTargetHome' NAME='HOMET' ONCLICK="newElement(document.getElementById('tlat2').innerHTML, document.getElementById('tlon2').innerHTML)">
+             Home->Target
+             </BUTTON>
+  <BUTTON ID='setHomeSelected' NAME='HOMES' ONCLICK="setHomeSelected()">
+             Home->Selected
+             </BUTTON>
+  <BUTTON ID='setHomeCurrent' NAME='HOMEC' ONCLICK="setHomeCoords(document.getElementById('lat2').innerHTML, document.getElementById('lon2').innerHTML)">
+             Home->Current
+             </BUTTON>
+  <BR><BR>
+  <TABLE BORDER=1>
+    <TR>
+        <TD>
+            <INPUT TYPE='number' STEP='0.00000000001' ID='lat1' PLACEHOLDER="Latitude">
+            <INPUT TYPE='number' STEP='0.00000000001' ID='lon1' PLACEHOLDER="Longitude">
+            <BUTTON NAME='ADD' ONCLICK="newElement(document.getElementById('lat1').value, document.getElementById('lon1').value)">Add</BUTTON>
+            <BUTTON ID='setHomeInput' NAME='HOMEI' ONCLICK="setHomeCoords(document.getElementById('lat1').value, document.getElementById('lon1').value)">
+            Set as Home
+            </BUTTON>
+        </TD>
+    </TR>
+    <TR>
+        <TD>
+            <BUTTON ID='grabWaypoint' NAME='GRAB' ONCLICK="newElement(document.getElementById('lat2').innerHTML, document.getElementById('lon2').innerHTML)">
+            Add Current Position
+            </BUTTON>
+        </TD>
+    </TR>
+    <TR>
+        <TD>
+            Add Waypoints from File:
+            <INPUT TYPE='file' ACCEPT='.txt' ID='waypoints' NAME='WPlist'>
+            <BUTTON ID='addFile' NAME='addFILE' ONCLICK="addFile()">Add File</BUTTON>
+        </TD>
+    </TR>
+    <TR>
+        <TD>
+            <b>Mission List:</b>
+            <BUTTON ID='deleteSelected' NAME='DELSEL' ONCLICK="removeCheckedElements()">Delete Selected</BUTTON>
+            <BUTTON ID='clearAll' NAME='CLEAR' ONCLICK="removeAllElements()">Clear List</BUTTON>
+            <BUTTON ID='unselectAll' NAME='DESELECT' ONCLICK="unselectAll()">Unselect All</BUTTON>
+            <OL ID="missionList"></OL>
+        </TD>
+    </TR>
+  </TABLE>
+</DIV> 
+</BODY> 
+</HTML> 
